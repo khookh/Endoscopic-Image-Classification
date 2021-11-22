@@ -32,16 +32,14 @@ def textonframe(dispframe_):
     return dispframe_
 
 
-def write_on_disk(queue, gtype_):
+def write_on_disk(a, gtype_):
     frame_count = 0
-    while queue.empty() is not True:
-        a = queue.get()
-        file_name = "recording" + os.path.splitext(os.path.basename(str(sys.argv[1])))[0] + "_" + gtype_ + "_frame"
+    file_name = "recording" + os.path.splitext(os.path.basename(str(sys.argv[1])))[0] + "_" + gtype_ + "_frame"
+    frame_count += 1
+    # write a on disk
+    while os.path.exists(DATA_PATH + '%s/%s%d.png' % (gtype_, file_name, frame_count)):
         frame_count += 1
-        # write a on disk
-        while os.path.exists(DATA_PATH + '%s/%s%d.png' % (gtype_, file_name, frame_count)):
-            frame_count += 1
-        cv.imwrite(DATA_PATH + '%s/%s%d.png' % (gtype_, file_name, frame_count), a)
+    cv.imwrite(DATA_PATH + '%s/%s%d.png' % (gtype_, file_name, frame_count), a)
 
 
 class KeySwitch:
@@ -86,7 +84,11 @@ if __name__ == '__main__':
         cap = cv.VideoCapture(INPUT_PATH)
         cv.waitKey(100)
     while True:
-        k = cv.waitKey(10) & 0xFF
+
+        ret, frame = cap.read()
+        temp_frame_queue.put(frame)
+
+        k = cv.waitKey(1) & 0xFF
         if k == ord('p'):
             while True:
                 if cv.waitKey(1) & 0xFF == ord('s'):
@@ -98,18 +100,22 @@ if __name__ == '__main__':
         if pressed:
             gtype = temp_type
             capture_flag = True
-            write_on_disk(temp_frame_queue, gtype)
+            # write the last 10th frame
+            write_on_disk(temp_frame_queue.get(), gtype)
+            # write the current frame
+            write_on_disk(frame, gtype)
 
-        ret, frame = cap.read()
-        temp_frame_queue.put(frame)
         if temp_frame_queue.qsize() > 10:
+            # keep in track only the 10 last frames
             temp_frame_queue.get()
+
         if capture_flag:
             capture_counter -= 1
             if capture_counter == 0:
                 capture_flag = False
                 capture_counter = 10
-                write_on_disk(temp_frame_queue, gtype)
+                # write the 10th frame after capture
+                write_on_disk(frame, gtype)
 
         if ret is not True:
             break
