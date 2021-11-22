@@ -7,7 +7,7 @@ from multiprocessing import Queue
 
 INPUT_PATH = sys.argv[1]
 DATA_PATH = sys.argv[2]
-
+base_name = os.path.splitext(os.path.basename(str(sys.argv[1])))[0]
 
 def textonframe(dispframe_):
     """
@@ -43,12 +43,15 @@ def write_on_disk(frame_, gtype_):
     :param gtype_: corresponding anatomical site
     """
     frame_count = 0
-    file_name = "recording" + os.path.splitext(os.path.basename(str(sys.argv[1])))[0] + "_" + gtype_ + "_frame"
+    file_name = "recording" + base_name + "_" + gtype_ + "_frame"
     frame_count += 1
     # write a on disk
-    while os.path.exists(DATA_PATH + '%s/%s%d.png' % (gtype_, file_name, frame_count)):
+    dir_name = DATA_PATH + '%s/%s' % (gtype_, base_name)
+    if not os.path.exists(dir_name) :
+        os.mkdir(dir_name)
+    while os.path.exists(dir_name + '/%s%d.png' % (file_name, frame_count)):
         frame_count += 1
-    cv.imwrite(DATA_PATH + '%s/%s%d.png' % (gtype_, file_name, frame_count), frame_)
+    cv.imwrite(dir_name + '/%s%d.png' % (file_name, frame_count), frame_)
 
 
 class KeySwitch:
