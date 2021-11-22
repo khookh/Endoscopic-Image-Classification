@@ -5,41 +5,74 @@ import os
 
 from multiprocessing import Queue
 
-frame_count = 0
+INPUT_PATH = sys.argv[1]
+DATA_PATH = sys.argv[2]
 
 
-def textonframe(dispframe):
-    dispframe = cv.putText(dispframe, "0 = oesophagus", (5, 20), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
-                           cv.LINE_AA)
-    dispframe = cv.putText(dispframe, "1 = junction", (5, 40), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
-                           cv.LINE_AA)
-    dispframe = cv.putText(dispframe, "2 = grande courbure gastrique", (5, 60), cv.FONT_HERSHEY_SIMPLEX, .4,
-                           (0, 0, 255), 1,
-                           cv.LINE_AA)
-    dispframe = cv.putText(dispframe, "3 = pylore-antre", (5, 80), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
-                           cv.LINE_AA)
-    dispframe = cv.putText(dispframe, "4 = angle", (5, 100), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
-                           cv.LINE_AA)
-    dispframe = cv.putText(dispframe, "5 = retro vision", (5, 120), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
-                           cv.LINE_AA)
-    dispframe = cv.putText(dispframe, "6 = sur angulaire-petite courbure", (5, 140), cv.FONT_HERSHEY_SIMPLEX, .4,
-                           (0, 0, 255), 1,
-                           cv.LINE_AA)
-    dispframe = cv.putText(dispframe, "7 = GARBAGE", (5, 160), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
-                           cv.LINE_AA)
+def textonframe(dispframe_):
+    dispframe_ = cv.putText(dispframe_, "0 = oesophagus", (5, 20), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
+                            cv.LINE_AA)
+    dispframe_ = cv.putText(dispframe_, "1 = junction", (5, 40), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
+                            cv.LINE_AA)
+    dispframe_ = cv.putText(dispframe_, "2 = grande courbure gastrique", (5, 60), cv.FONT_HERSHEY_SIMPLEX, .4,
+                            (0, 0, 255), 1,
+                            cv.LINE_AA)
+    dispframe_ = cv.putText(dispframe_, "3 = pylore-antre", (5, 80), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
+                            cv.LINE_AA)
+    dispframe_ = cv.putText(dispframe_, "4 = angle", (5, 100), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
+                            cv.LINE_AA)
+    dispframe_ = cv.putText(dispframe_, "5 = retro vision", (5, 120), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
+                            cv.LINE_AA)
+    dispframe_ = cv.putText(dispframe_, "6 = sur angulaire-petite courbure", (5, 140), cv.FONT_HERSHEY_SIMPLEX, .4,
+                            (0, 0, 255), 1,
+                            cv.LINE_AA)
+    dispframe_ = cv.putText(dispframe_, "7 = GARBAGE", (5, 160), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
+                            cv.LINE_AA)
 
-    return dispframe
+    return dispframe_
 
 
 def write_on_disk(queue, gtype_):
-    global frame_count
+    frame_count = 0
     while queue.empty() is not True:
         a = queue.get()
+        file_name = "recording" + os.path.splitext(os.path.basename(str(sys.argv[1])))[0] + "_" + gtype_ + "_frame"
         frame_count += 1
         # write a on disk
-        while os.path.exists('E:/Gastroscopies/capture/%s/%s%d.png' % (gtype_, os.path.basename(str(sys.argv[1])), frame_count)):
+        while os.path.exists(DATA_PATH + '%s/%s%d.png' % (gtype_, file_name, frame_count)):
             frame_count += 1
-        cv.imwrite('E:/Gastroscopies/capture/%s/%s%d.png' % (gtype_, os.path.basename(str(sys.argv[1])), frame_count),a)
+        cv.imwrite(DATA_PATH + '%s/%s%d.png' % (gtype_, file_name, frame_count), a)
+
+
+class KeySwitch:
+
+    def keymanager(self, key):
+        default_key = False, "garbage"
+        return getattr(self, 'case_' + chr(key), lambda: default_key)()
+
+    def case_0(self):
+        return True, "oesophagus"
+
+    def case_1(self):
+        return True, "junction"
+
+    def case_2(self):
+        return True, "grande courbure gastrique"
+
+    def case_3(self):
+        return True, "pylore-antre"
+
+    def case_4(self):
+        return True, "angle"
+
+    def case_5(self):
+        return True, "retro vision"
+
+    def case_6(self):
+        return True, "sur angulaire-petite courbure"
+
+    def case_7(self):
+        return True, "garbage"
 
 
 if __name__ == '__main__':
@@ -47,10 +80,10 @@ if __name__ == '__main__':
     capture_counter = 10
     capture_flag = False
     gtype = "garbage"
-    cap = cv.VideoCapture(str(sys.argv[1]))
+    cap = cv.VideoCapture(INPUT_PATH)
     temp_frame_queue = Queue()
     while not cap.isOpened():
-        cap = cv.VideoCapture(str(sys.argv[1]))
+        cap = cv.VideoCapture(INPUT_PATH)
         cv.waitKey(100)
     while True:
         k = cv.waitKey(10) & 0xFF
@@ -60,39 +93,12 @@ if __name__ == '__main__':
                     break
         if k == ord('q'):
             break
-        if k == ord('0'):
+        ks = KeySwitch()
+        pressed, temp_type = ks.keymanager(k)
+        if pressed:
+            gtype = temp_type
             capture_flag = True
-            gtype = "oesophagus"
             write_on_disk(temp_frame_queue, gtype)
-        if k == ord('1'):
-            capture_flag = True
-            gtype = "junction"
-            write_on_disk(temp_frame_queue, gtype)
-        if k == ord('2'):
-            capture_flag = True
-            gtype = "grande courbure gastrique"
-            write_on_disk(temp_frame_queue, gtype)
-        if k == ord('3'):
-            capture_flag = True
-            gtype = "pylore-antre"
-            write_on_disk(temp_frame_queue, gtype)
-        if k == ord('4'):
-            capture_flag = True
-            gtype = "angle"
-            write_on_disk(temp_frame_queue, gtype)
-        if k == ord('5'):
-            capture_flag = True
-            gtype = "retro vision"
-            write_on_disk(temp_frame_queue, gtype)
-        if k == ord('6'):
-            capture_flag = True
-            gtype = "sur angulaire-petite courbure"
-            write_on_disk(temp_frame_queue, gtype)
-        if k == ord('7'):
-            capture_flag = True
-            gtype = "garbage"
-            write_on_disk(temp_frame_queue, gtype)
-
 
         ret, frame = cap.read()
         temp_frame_queue.put(frame)
