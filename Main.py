@@ -10,6 +10,11 @@ DATA_PATH = sys.argv[2]
 
 
 def textonframe(dispframe_):
+    """
+    Adds informations on screen for user
+    :param dispframe_: frame on which the information have to be added
+    :return: updated frame
+    """
     dispframe_ = cv.putText(dispframe_, "0 = oesophagus", (5, 20), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
                             cv.LINE_AA)
     dispframe_ = cv.putText(dispframe_, "1 = junction", (5, 40), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
@@ -32,19 +37,30 @@ def textonframe(dispframe_):
     return dispframe_
 
 
-def write_on_disk(a, gtype_):
+def write_on_disk(frame_, gtype_):
+    """
+    :param frame_: frame to be written on disk
+    :param gtype_: corresponding anatomical site
+    """
     frame_count = 0
     file_name = "recording" + os.path.splitext(os.path.basename(str(sys.argv[1])))[0] + "_" + gtype_ + "_frame"
     frame_count += 1
     # write a on disk
     while os.path.exists(DATA_PATH + '%s/%s%d.png' % (gtype_, file_name, frame_count)):
         frame_count += 1
-    cv.imwrite(DATA_PATH + '%s/%s%d.png' % (gtype_, file_name, frame_count), a)
+    cv.imwrite(DATA_PATH + '%s/%s%d.png' % (gtype_, file_name, frame_count), frame_)
 
 
 class KeySwitch:
+    """
+    Implements a switch to match user key input with correct anatomical site
+    """
 
     def keymanager(self, key):
+        """
+        :param key: key (ord value) user has pressed
+        :return: Tuple ('has the user pressed?', 'which anatomical site?')
+        """
         default_key = False, "garbage"
         return getattr(self, 'case_' + chr(key), lambda: default_key)()
 
@@ -73,19 +89,21 @@ class KeySwitch:
         return True, "garbage"
 
 
-if __name__ == '__main__':
-    frame_count = 0
+def video(cap_):
+    """
+    Read and display on screen the given video flux
+    :param cap_: video capture input
+    """
+    # counter used to get the 10th frame after user capture input
     capture_counter = 10
+    # flag used to know if the user activated a capture event
     capture_flag = False
+    # current / last observed observed site
     gtype = "garbage"
-    cap = cv.VideoCapture(INPUT_PATH)
+    # queue storing the last 10 frames
     temp_frame_queue = Queue()
-    while not cap.isOpened():
-        cap = cv.VideoCapture(INPUT_PATH)
-        cv.waitKey(100)
     while True:
-
-        ret, frame = cap.read()
+        ret, frame = cap_.read()
         temp_frame_queue.put(frame)
 
         k = cv.waitKey(1) & 0xFF
@@ -122,3 +140,12 @@ if __name__ == '__main__':
         dispframe = cv.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv.INTER_CUBIC)
         dispframe = textonframe(dispframe)
         cv.imshow('comparison', dispframe)
+    cap_.release()
+
+
+if __name__ == '__main__':
+    cap = cv.VideoCapture(INPUT_PATH)
+    while not cap.isOpened():
+        cap = cv.VideoCapture(INPUT_PATH)
+        cv.waitKey(100)
+    video(cap)
