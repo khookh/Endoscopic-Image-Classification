@@ -1,13 +1,16 @@
-import numpy as np
+import tkinter
+from tkinter import filedialog
 import cv2 as cv
 import sys
 import os
 
-from multiprocessing import Queue
+from queue import *
 
-INPUT_PATH = sys.argv[1]
-DATA_PATH = sys.argv[2]
-base_name = os.path.splitext(os.path.basename(str(sys.argv[1])))[0]
+#DATA_PATH = sys.argv[1]
+DATA_PATH = "E:\\Gastroscopies\\capture\\"
+INPUT_PATH = ""
+base_name = ""
+
 
 def textonframe(dispframe_):
     """
@@ -45,9 +48,8 @@ def write_on_disk(frame_, gtype_):
     frame_count = 0
     file_name = "recording" + base_name + "_" + gtype_ + "_frame"
     frame_count += 1
-    # write a on disk
     dir_name = DATA_PATH + '%s/%s' % (gtype_, base_name)
-    if not os.path.exists(dir_name) :
+    if not os.path.exists(dir_name):
         os.mkdir(dir_name)
     while os.path.exists(dir_name + '/%s%d.png' % (file_name, frame_count)):
         frame_count += 1
@@ -109,13 +111,14 @@ def video(cap_):
         ret, frame = cap_.read()
         temp_frame_queue.put(frame)
 
-        k = cv.waitKey(1) & 0xFF
+        k = cv.waitKey(25) & 0xFF
         if k == ord('p'):
             while True:
                 if cv.waitKey(1) & 0xFF == ord('s'):
                     break
         if k == ord('q'):
             break
+
         ks = KeySwitch()
         pressed, temp_type = ks.keymanager(k)
         if pressed:
@@ -142,13 +145,27 @@ def video(cap_):
             break
         dispframe = cv.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv.INTER_CUBIC)
         dispframe = textonframe(dispframe)
-        cv.imshow('comparison', dispframe)
-    cap_.release()
+        cv.imshow('tool', dispframe)
+    cv.destroyWindow('tool')
+
+
 
 
 if __name__ == '__main__':
-    cap = cv.VideoCapture(INPUT_PATH)
-    while not cap.isOpened():
-        cap = cv.VideoCapture(INPUT_PATH)
-        cv.waitKey(100)
-    video(cap)
+    while True:
+        tkinter.Tk().withdraw()  # prevents an empty tkinter window from appearing
+        INPUT_PATH = filedialog.askopenfilename()
+        base_name = os.path.splitext(os.path.basename(INPUT_PATH))[0]
+        if os.path.splitext(INPUT_PATH)[1] != ".mov":
+            print("Invalid file format")
+        else:
+            cap = cv.VideoCapture(INPUT_PATH)
+            while not cap.isOpened():
+                cap = cv.VideoCapture(INPUT_PATH)
+                cv.waitKey(100)
+            video(cap)
+            cap.release()
+
+        print("press \"q\" to quit, \"p\" to continue")
+        if input() == "q":
+            break
