@@ -14,7 +14,7 @@ INPUT_PATH = ""
 base_name = ""
 
 
-def text_on_frame(dispframe_):
+def text_on_frame(dispframe_, c):
     """
     Adds informations on screen for user
     :param dispframe_: frame on which the information have to be added
@@ -37,6 +37,8 @@ def text_on_frame(dispframe_):
                             (0, 0, 255), 1,
                             cv.LINE_AA)
     dispframe_ = cv.putText(dispframe_, "7 = GARBAGE", (5, 160), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
+                            cv.LINE_AA)
+    dispframe_ = cv.putText(dispframe_, "counter = %i" % c, (5, 250), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
                             cv.LINE_AA)
 
     return dispframe_
@@ -131,7 +133,7 @@ def video(cap_):
                 write_on_disk(frame, gtype)
         if ret is not True:
             break
-        cv.imshow('tool', text_on_frame(cv.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv.INTER_CUBIC)))
+        cv.imshow('tool', text_on_frame(cv.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv.INTER_CUBIC), 0))
     cv.destroyWindow('tool')
 
 
