@@ -1,18 +1,20 @@
-import tkinter
-from tkinter import filedialog
+# Written by Stefano Donne
+# stefanodonne@gmail.com
+# November 2021
+
 import cv2 as cv
-import sys
 import os
-
+import sys
+import tkinter
 from queue import *
+from tkinter import filedialog, messagebox
 
-#DATA_PATH = sys.argv[1]
-DATA_PATH = "E:\\Gastroscopies\\capture\\"
+DATA_PATH = sys.argv[1]
 INPUT_PATH = ""
 base_name = ""
 
 
-def textonframe(dispframe_):
+def text_on_frame(dispframe_):
     """
     Adds informations on screen for user
     :param dispframe_: frame on which the information have to be added
@@ -61,12 +63,12 @@ class KeySwitch:
     Implements a switch to match user key input with correct anatomical site
     """
 
-    def keymanager(self, key):
+    def key_manager(self, key):
         """
         :param key: key (ord value) user has pressed
         :return: Tuple ('has the user pressed?', 'which anatomical site?')
         """
-        default_key = False, "garbage"
+        default_key = False, "default"
         return getattr(self, 'case_' + chr(key), lambda: default_key)()
 
     def case_0(self):
@@ -99,18 +101,13 @@ def video(cap_):
     Read and display on screen the given video flux
     :param cap_: video capture input
     """
-    # counter used to get the 10th frame after user capture input
     capture_counter = 10
-    # flag used to know if the user activated a capture event
     capture_flag = False
-    # current / last observed observed site
-    gtype = "garbage"
-    # queue storing the last 10 frames
+    gtype = "default"
     temp_frame_queue = Queue()
     while True:
         ret, frame = cap_.read()
         temp_frame_queue.put(frame)
-
         k = cv.waitKey(25) & 0xFF
         if k == ord('p'):
             while True:
@@ -118,42 +115,30 @@ def video(cap_):
                     break
         if k == ord('q'):
             break
-
-        ks = KeySwitch()
-        pressed, temp_type = ks.keymanager(k)
+        pressed, temp_type = KeySwitch().key_manager(k)
         if pressed:
             gtype = temp_type
             capture_flag = True
-            # write the last 10th frame
             write_on_disk(temp_frame_queue.get(), gtype)
-            # write the current frame
             write_on_disk(frame, gtype)
-
         if temp_frame_queue.qsize() > 10:
-            # keep in track only the 10 last frames
             temp_frame_queue.get()
-
         if capture_flag:
             capture_counter -= 1
             if capture_counter == 0:
                 capture_flag = False
                 capture_counter = 10
-                # write the 10th frame after capture
                 write_on_disk(frame, gtype)
-
         if ret is not True:
             break
-        dispframe = cv.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv.INTER_CUBIC)
-        dispframe = textonframe(dispframe)
-        cv.imshow('tool', dispframe)
+        cv.imshow('tool', text_on_frame(cv.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv.INTER_CUBIC)))
     cv.destroyWindow('tool')
-
-
 
 
 if __name__ == '__main__':
     while True:
-        tkinter.Tk().withdraw()  # prevents an empty tkinter window from appearing
+        tkinter.Tk().withdraw()
+        tkinter.messagebox.showinfo('file path', 'choose the video you want to process')
         INPUT_PATH = filedialog.askopenfilename()
         base_name = os.path.splitext(os.path.basename(INPUT_PATH))[0]
         if os.path.splitext(INPUT_PATH)[1] != ".mov":
@@ -165,7 +150,6 @@ if __name__ == '__main__':
                 cv.waitKey(100)
             video(cap)
             cap.release()
-
         print("press \"q\" to quit, \"p\" to continue")
         if input() == "q":
             break
