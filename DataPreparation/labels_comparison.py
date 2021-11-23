@@ -8,10 +8,17 @@ import pandas as pd
 import os
 import random
 import sys
+from sklearn.metrics import cohen_kappa_score
 import selection_tool as st
 
 INPUT_PATH = sys.argv[1]
 OUTPUT_PATH = sys.argv[2]
+
+
+def stat(df):
+    y1 = df["corrected site"]
+    y2 = df["selected site"]
+    print("cohen's kappa = " + str(cohen_kappa_score(y1, y2)))
 
 
 def display(image_path, c):
@@ -100,7 +107,9 @@ class LabelManager:
         self.array_append(picked_site, picked_video, picked_frame)
 
     def save(self):
+        stat(self.result)
         self.result.to_excel(OUTPUT_PATH)
+        os.startfile(OUTPUT_PATH)
 
     def return_back(self):
         self.result.drop(self.result.tail(1).index, inplace=True)
@@ -115,4 +124,4 @@ if __name__ == '__main__':
         lm.iterate()
     lm.save()
 
-# TODO : 3) add stats to xls 4) xls auto opening
+# TODO : 3) add stats to xls
