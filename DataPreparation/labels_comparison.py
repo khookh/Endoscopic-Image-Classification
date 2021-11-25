@@ -8,7 +8,7 @@ import pandas as pd
 import os
 import random
 import sys
-from sklearn.metrics import cohen_kappa_score
+from sklearn.metrics import cohen_kappa_score, accuracy_score
 import selection_tool as st
 
 INPUT_PATH = sys.argv[1]
@@ -18,7 +18,8 @@ OUTPUT_PATH = sys.argv[2]
 def stat(df):
     y1 = df["corrected site"]
     y2 = df["selected site"]
-    print("cohen's kappa = " + str(cohen_kappa_score(y1, y2)))
+    print("\n cohen's kappa = " + str(cohen_kappa_score(y1, y2)))
+    print("\n % of agreement = " + str(accuracy_score(y1, y2)))
 
 
 def display(image_path, c):
@@ -123,5 +124,3 @@ if __name__ == '__main__':
     while not lm.close_flag:
         lm.iterate()
     lm.save()
-
-# TODO : 3) add stats to xls

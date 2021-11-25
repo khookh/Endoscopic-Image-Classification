@@ -28,16 +28,20 @@ def text_on_frame(dispframe_, c):
     dispframe_ = cv.putText(dispframe_, "2 = grande courbure gastrique", (5, 60), cv.FONT_HERSHEY_SIMPLEX, .4,
                             (0, 0, 255), 1,
                             cv.LINE_AA)
-    dispframe_ = cv.putText(dispframe_, "3 = pylore-antre", (5, 80), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
-                            cv.LINE_AA)
-    dispframe_ = cv.putText(dispframe_, "4 = angle", (5, 100), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
-                            cv.LINE_AA)
-    dispframe_ = cv.putText(dispframe_, "5 = retro vision", (5, 120), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
-                            cv.LINE_AA)
-    dispframe_ = cv.putText(dispframe_, "6 = sur angulaire-petite courbure", (5, 140), cv.FONT_HERSHEY_SIMPLEX, .4,
+    dispframe_ = cv.putText(dispframe_, "3 = corps gastrique inférieur", (5, 80), cv.FONT_HERSHEY_SIMPLEX, .4,
                             (0, 0, 255), 1,
                             cv.LINE_AA)
-    dispframe_ = cv.putText(dispframe_, "7 = GARBAGE", (5, 160), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
+    dispframe_ = cv.putText(dispframe_, "4 = pylore-antre", (5, 100), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
+                            cv.LINE_AA)
+    dispframe_ = cv.putText(dispframe_, "5 = angle", (5, 120), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
+                            cv.LINE_AA)
+    dispframe_ = cv.putText(dispframe_, "6 = retro vision - cardia", (5, 140), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255),
+                            1,
+                            cv.LINE_AA)
+    dispframe_ = cv.putText(dispframe_, "7 = sur angulaire-petite courbure", (5, 160), cv.FONT_HERSHEY_SIMPLEX, .4,
+                            (0, 0, 255), 1,
+                            cv.LINE_AA)
+    dispframe_ = cv.putText(dispframe_, "8 = unqualified", (5, 180), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
                             cv.LINE_AA)
     dispframe_ = cv.putText(dispframe_, "counter = %s" % str(c), (5, 250), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
                             cv.LINE_AA)
@@ -84,22 +88,26 @@ class KeySwitch:
         return True, "grande courbure gastrique"
 
     def case_3(self):
-        return True, "pylore-antre"
+        return True, "corps gastrique inférieur"
 
     def case_4(self):
-        return True, "angle"
+        return True, "pylore-antre"
 
     def case_5(self):
-        return True, "retro vision"
+        return True, "angle"
 
     def case_6(self):
-        return True, "sur angulaire-petite courbure"
+        return True, "retro vision - cardia"
 
     def case_7(self):
-        return True, "garbage"
+        return True, "sur angulaire-petite courbure"
+
+    def case_8(self):
+        return True, "unqualified"
 
 
 def video(cap_):
+    # TODO : refactor video c'est dégueulasse
     """
     Read and display on screen the given video flux
     :param cap_: video capture input
@@ -108,30 +116,38 @@ def video(cap_):
     capture_flag = False
     gtype = "default"
     temp_frame_queue = Queue()
+
+    def write_now(k_, frame_):
+        pressed, temp_type = KeySwitch().key_manager(k_)
+        if pressed:
+            write_on_disk(temp_frame_queue.get(), temp_type)
+            write_on_disk(frame_, temp_type)
+            return True, temp_type
+        return capture_flag, gtype
+
     while True:
         ret, frame = cap_.read()
         temp_frame_queue.put(frame)
         k = cv.waitKey(25) & 0xFF
         if k == ord('p'):
             while True:
-                if cv.waitKey(1) & 0xFF == ord('s'):
+                k = cv.waitKey(1) & 0xFF
+                if k == ord('s'):
                     break
+                capture_flag, gtype = write_now(k, frame)
         if k == ord('q'):
             break
-        pressed, temp_type = KeySwitch().key_manager(k)
-        if pressed:
-            gtype = temp_type
-            capture_flag = True
-            write_on_disk(temp_frame_queue.get(), gtype)
-            write_on_disk(frame, gtype)
+        capture_flag, gtype = write_now(k, frame)
+
         if temp_frame_queue.qsize() > 10:
             temp_frame_queue.get()
-        if capture_flag:
+        if capture_flag is True:
             capture_counter -= 1
             if capture_counter == 0:
-                capture_flag = False
                 capture_counter = 10
                 write_on_disk(frame, gtype)
+                capture_flag = False
+
         if ret is not True:
             break
         cv.imshow('tool', text_on_frame(cv.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv.INTER_CUBIC), gtype))
@@ -153,6 +169,7 @@ if __name__ == '__main__':
                 cv.waitKey(100)
             video(cap)
             cap.release()
-        print("press \"q\" to quit, \"p\" to continue")
-        if input() == "q":
+        ans = tkinter.messagebox.askyesno(title="options", message="You finished the processing of video %s \n" 
+                                                                   "Do you wish to continue ?" % base_name)
+        if not ans :
             break
