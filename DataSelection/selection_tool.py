@@ -28,7 +28,7 @@ def text_on_frame(dispframe_, c):
     dispframe_ = cv.putText(dispframe_, "2 = grande courbure gastrique", (5, 60), cv.FONT_HERSHEY_SIMPLEX, .4,
                             (0, 0, 255), 1,
                             cv.LINE_AA)
-    dispframe_ = cv.putText(dispframe_, "3 = corps gastrique inférieur", (5, 80), cv.FONT_HERSHEY_SIMPLEX, .4,
+    dispframe_ = cv.putText(dispframe_, "3 = corps gastrique inferieur", (5, 80), cv.FONT_HERSHEY_SIMPLEX, .4,
                             (0, 0, 255), 1,
                             cv.LINE_AA)
     dispframe_ = cv.putText(dispframe_, "4 = pylore-antre", (5, 100), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
@@ -88,7 +88,7 @@ class KeySwitch:
         return True, "grande courbure gastrique"
 
     def case_3(self):
-        return True, "corps gastrique inférieur"
+        return True, "corps gastrique inferieur"
 
     def case_4(self):
         return True, "pylore-antre"
@@ -169,7 +169,7 @@ if __name__ == '__main__':
                 cv.waitKey(100)
             video(cap)
             cap.release()
-        ans = tkinter.messagebox.askyesno(title="options", message="You finished the processing of video %s \n" 
+        ans = tkinter.messagebox.askyesno(title="options", message="You finished the processing of video %s \n"
                                                                    "Do you wish to continue ?" % base_name)
-        if not ans :
+        if not ans:
             break
