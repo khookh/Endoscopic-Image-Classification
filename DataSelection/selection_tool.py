@@ -38,9 +38,9 @@ def text_on_frame(dispframe_, c):
     dispframe_ = cv.putText(dispframe_, "6 = retro vision - cardia", (5, 140), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255),
                             1,
                             cv.LINE_AA)
-    dispframe_ = cv.putText(dispframe_, "7 = sur angulaire-petite courbure", (5, 160), cv.FONT_HERSHEY_SIMPLEX, .4,
-                            (0, 0, 255), 1,
-                            cv.LINE_AA)
+    #dispframe_ = cv.putText(dispframe_, "7 = sur angulaire-petite courbure", (5, 160), cv.FONT_HERSHEY_SIMPLEX, .4,
+    #                        (0, 0, 255), 1,
+    #                        cv.LINE_AA)
     dispframe_ = cv.putText(dispframe_, "8 = unqualified", (5, 180), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
                             cv.LINE_AA)
     dispframe_ = cv.putText(dispframe_, "counter = %s" % str(c), (5, 250), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
@@ -129,6 +129,7 @@ def video(cap_):
         ret, frame = cap_.read()
         temp_frame_queue.put(frame)
         k = cv.waitKey(25) & 0xFF
+        capture_flag, gtype = write_now(k, frame)
         if k == ord('p'):
             while True:
                 k = cv.waitKey(1) & 0xFF
@@ -137,8 +138,6 @@ def video(cap_):
                 capture_flag, gtype = write_now(k, frame)
         if k == ord('q'):
             break
-        capture_flag, gtype = write_now(k, frame)
-
         if temp_frame_queue.qsize() > 10:
             temp_frame_queue.get()
         if capture_flag is True:

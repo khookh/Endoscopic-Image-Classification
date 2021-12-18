@@ -104,7 +104,10 @@ class LabelManager:
         while not os.listdir(INPUT_PATH + "\\" + picked_site):
             picked_site = random.choice(os.listdir(INPUT_PATH))
         picked_video = random.choice(os.listdir(INPUT_PATH + "\\" + picked_site))
+        while len(os.listdir(INPUT_PATH + "\\" + picked_site + "\\" + picked_video)) == 0:
+            picked_video = random.choice(os.listdir(INPUT_PATH + "\\" + picked_site))
         picked_frame = random.choice(os.listdir(INPUT_PATH + "\\" + picked_site + "\\" + picked_video))
+
         self.array_append(picked_site, picked_video, picked_frame)
 
     def save(self):
