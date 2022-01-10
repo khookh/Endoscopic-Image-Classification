@@ -9,6 +9,17 @@ import tkinter
 from queue import *
 from tkinter import filedialog, messagebox
 
+# ANATOMICAL SITES NAMES
+OESOPHAGUS = "oesophagus"
+JUNCTION = "junction"
+GCG = "grande courbure gastrique"
+CGI = "corps gastrique inferieur"
+PYLORE = "pylore-antre"
+ANGLE = "angle"
+RVC = "retro vision - fundus"
+RVMUB = "retro vision - middle_upper body"
+UQ = "unqualified"
+
 DATA_PATH = sys.argv[1]
 INPUT_PATH = ""
 base_name = ""
@@ -21,27 +32,27 @@ def text_on_frame(dispframe_, c):
     :param dispframe_: frame on which the information have to be added
     :return: updated frame
     """
-    dispframe_ = cv.putText(dispframe_, "0 = oesophagus", (5, 20), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
+    dispframe_ = cv.putText(dispframe_, "0 = %s" % OESOPHAGUS, (5, 20), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
                             cv.LINE_AA)
-    dispframe_ = cv.putText(dispframe_, "1 = junction", (5, 40), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
+    dispframe_ = cv.putText(dispframe_, "1 = %s" % JUNCTION, (5, 40), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
                             cv.LINE_AA)
-    dispframe_ = cv.putText(dispframe_, "2 = grande courbure gastrique", (5, 60), cv.FONT_HERSHEY_SIMPLEX, .4,
+    dispframe_ = cv.putText(dispframe_, "2 = %s" % GCG, (5, 60), cv.FONT_HERSHEY_SIMPLEX, .4,
                             (0, 0, 255), 1,
                             cv.LINE_AA)
-    dispframe_ = cv.putText(dispframe_, "3 = corps gastrique inferieur", (5, 80), cv.FONT_HERSHEY_SIMPLEX, .4,
+    dispframe_ = cv.putText(dispframe_, "3 = %s" % CGI, (5, 80), cv.FONT_HERSHEY_SIMPLEX, .4,
                             (0, 0, 255), 1,
                             cv.LINE_AA)
-    dispframe_ = cv.putText(dispframe_, "4 = pylore-antre", (5, 100), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
+    dispframe_ = cv.putText(dispframe_, "4 = %s" % PYLORE, (5, 100), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
                             cv.LINE_AA)
-    dispframe_ = cv.putText(dispframe_, "5 = angle", (5, 120), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
+    dispframe_ = cv.putText(dispframe_, "5 = %s" % ANGLE, (5, 120), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
                             cv.LINE_AA)
-    dispframe_ = cv.putText(dispframe_, "6 = retro vision - cardia", (5, 140), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255),
+    dispframe_ = cv.putText(dispframe_, "6 = %s" % RVC, (5, 140), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255),
                             1,
                             cv.LINE_AA)
-    #dispframe_ = cv.putText(dispframe_, "7 = sur angulaire-petite courbure", (5, 160), cv.FONT_HERSHEY_SIMPLEX, .4,
-    #                        (0, 0, 255), 1,
-    #                        cv.LINE_AA)
-    dispframe_ = cv.putText(dispframe_, "8 = unqualified", (5, 180), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
+    dispframe_ = cv.putText(dispframe_, "7 = %s" % RVMUB, (5, 160), cv.FONT_HERSHEY_SIMPLEX, .4,
+                            (0, 0, 255), 1,
+                            cv.LINE_AA)
+    dispframe_ = cv.putText(dispframe_, "8 = %s" % UQ, (5, 180), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
                             cv.LINE_AA)
     dispframe_ = cv.putText(dispframe_, "counter = %s" % str(c), (5, 250), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
                             cv.LINE_AA)
@@ -79,31 +90,31 @@ class KeySwitch:
         return getattr(self, 'case_' + chr(key), lambda: default_key)()
 
     def case_0(self):
-        return True, "oesophagus"
+        return True, OESOPHAGUS
 
     def case_1(self):
-        return True, "junction"
+        return True, JUNCTION
 
     def case_2(self):
-        return True, "grande courbure gastrique"
+        return True, GCG
 
     def case_3(self):
-        return True, "corps gastrique inferieur"
+        return True, CGI
 
     def case_4(self):
-        return True, "pylore-antre"
+        return True, PYLORE
 
     def case_5(self):
-        return True, "angle"
+        return True, ANGLE
 
     def case_6(self):
-        return True, "retro vision - cardia"
+        return True, RVC
 
     def case_7(self):
-        return True, "sur angulaire-petite courbure"
+        return True, RVMUB
 
     def case_8(self):
-        return True, "unqualified"
+        return True, UQ
 
 
 def video(cap_):
