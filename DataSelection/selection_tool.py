@@ -12,12 +12,10 @@ from tkinter import filedialog, messagebox
 # ANATOMICAL SITES NAMES
 OESOPHAGUS = "oesophagus"
 JUNCTION = "junction"
-GCG = "grande courbure gastrique"
-CGI = "corps gastrique inferieur"
-PYLORE = "pylore-antre"
+GCG = "greater_curvature"
+PYLORE = "pylore_antre"
 ANGLE = "angle"
-RVC = "retro vision - fundus"
-RVMUB = "retro vision - middle_upper body"
+RVC = "retro_vision"
 UQ = "unqualified"
 
 DATA_PATH = sys.argv[1]
@@ -39,20 +37,14 @@ def text_on_frame(dispframe_, c):
     dispframe_ = cv.putText(dispframe_, "2 = %s" % GCG, (5, 60), cv.FONT_HERSHEY_SIMPLEX, .4,
                             (0, 0, 255), 1,
                             cv.LINE_AA)
-    dispframe_ = cv.putText(dispframe_, "3 = %s" % CGI, (5, 80), cv.FONT_HERSHEY_SIMPLEX, .4,
-                            (0, 0, 255), 1,
+    dispframe_ = cv.putText(dispframe_, "3 = %s" % PYLORE, (5, 80), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
                             cv.LINE_AA)
-    dispframe_ = cv.putText(dispframe_, "4 = %s" % PYLORE, (5, 100), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
+    dispframe_ = cv.putText(dispframe_, "4 = %s" % ANGLE, (5, 100), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
                             cv.LINE_AA)
-    dispframe_ = cv.putText(dispframe_, "5 = %s" % ANGLE, (5, 120), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
-                            cv.LINE_AA)
-    dispframe_ = cv.putText(dispframe_, "6 = %s" % RVC, (5, 140), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255),
+    dispframe_ = cv.putText(dispframe_, "5 = %s" % RVC, (5, 120), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255),
                             1,
                             cv.LINE_AA)
-    dispframe_ = cv.putText(dispframe_, "7 = %s" % RVMUB, (5, 160), cv.FONT_HERSHEY_SIMPLEX, .4,
-                            (0, 0, 255), 1,
-                            cv.LINE_AA)
-    dispframe_ = cv.putText(dispframe_, "8 = %s" % UQ, (5, 180), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
+    dispframe_ = cv.putText(dispframe_, "6 = %s" % UQ, (5, 180), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
                             cv.LINE_AA)
     dispframe_ = cv.putText(dispframe_, "counter = %s" % str(c), (5, 250), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
                             cv.LINE_AA)
@@ -99,21 +91,15 @@ class KeySwitch:
         return True, GCG
 
     def case_3(self):
-        return True, CGI
-
-    def case_4(self):
         return True, PYLORE
 
-    def case_5(self):
+    def case_4(self):
         return True, ANGLE
 
-    def case_6(self):
+    def case_5(self):
         return True, RVC
 
-    def case_7(self):
-        return True, RVMUB
-
-    def case_8(self):
+    def case_6(self):
         return True, UQ
 
 
