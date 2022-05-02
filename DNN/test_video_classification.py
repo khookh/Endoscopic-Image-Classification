@@ -7,8 +7,7 @@ from queue import *
 from tkinter import filedialog, messagebox
 
 
-
-def text_on_frame(dispframe_, site):
+def text_on_frame(dispframe_, site, top2):
     """
     Adds informations on screen for user
     :param site
@@ -16,6 +15,8 @@ def text_on_frame(dispframe_, site):
     :return: updated frame
     """
     dispframe_ = cv.putText(dispframe_, f"ANAT SAT = {site}", (5, 20), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
+                            cv.LINE_AA)
+    dispframe_ = cv.putText(dispframe_, f"top 2 pred = {top2}", (5, 50), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
                             cv.LINE_AA)
     return dispframe_
 
@@ -51,6 +52,7 @@ def video(cap_):
     score_queue = Queue()
     count = 0
     site = "null"
+    top2 = "null"
     while True:
         ret, frame = cap_.read()
         k = cv.waitKey(1) & 0xFF
@@ -68,10 +70,14 @@ def video(cap_):
             score_queue.put(a)
             pred = np.sum(list(score_queue.queue),axis=0)
             site = labels[np.argmax(pred)]
-        cv.imshow('classification', text_on_frame(cv.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv.INTER_CUBIC), site))
+            pred[np.argmax(pred)] = 0
+            top2 = labels[np.argmax(pred)]
+        disp_frame = text_on_frame(cv.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv.INTER_CUBIC), site, top2)
+        cv.imshow('classification', disp_frame)
+        writer.write(disp_frame)
         count += 1
     cv.destroyWindow('classification')
-
+    writer.release()
 
 if __name__ == '__main__':
 
@@ -92,6 +98,9 @@ if __name__ == '__main__':
             while not cap.isOpened():
                 cap = cv.VideoCapture(INPUT_PATH)
                 cv.waitKey(100)
+            writer = cv.VideoWriter("output.avi",
+                                     cv.VideoWriter_fourcc(*"MJPG"), 24, (960, 540))
+
             video(cap)
             cap.release()
         ans = tkinter.messagebox.askyesno(title="options", message="You finished the processing of video %s \n"
