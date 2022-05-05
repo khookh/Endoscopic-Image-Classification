@@ -89,7 +89,6 @@ class LabelManager:
         """
         :return: a tuple containing
         picked_site : which anatomical site has been randomly selected
-        picked_video : which video has been randomly selected
         picked_frame : which frame from the video and the given anatomical site has been randomly selected
         """
         if self.return_flag:
