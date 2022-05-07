@@ -14,9 +14,9 @@ def text_on_frame(dispframe_, site, top2):
     :param dispframe_: frame on which the information have to be added
     :return: updated frame
     """
-    dispframe_ = cv.putText(dispframe_, f"ANAT SAT = {site}", (5, 20), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
+    dispframe_ = cv.putText(dispframe_, f"TOP1_pred = {site}", (5, 40), cv.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 1,
                             cv.LINE_AA)
-    dispframe_ = cv.putText(dispframe_, f"top 2 pred = {top2}", (5, 50), cv.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1,
+    dispframe_ = cv.putText(dispframe_, f"TOP2_pred = {top2}", (5, 80), cv.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 1,
                             cv.LINE_AA)
     return dispframe_
 
@@ -61,16 +61,17 @@ def video(cap_):
                 k = cv.waitKey(1) & 0xFF
                 if k == ord('s'):
                     break
-        if k == ord('q'):
+        if k == ord('q') or not ret:
             break
         if count > 50 and not count % 5:
             if score_queue.qsize() > 5:
                 score_queue.get()
-            a = model.predict(tf.image.resize(cv.cvtColor(crop(frame), cv.COLOR_BGR2RGB), (500, 500))[None])
+            a = model.predict(tf.image.resize(cv.cvtColor(crop(frame), cv.COLOR_BGR2RGB), (224, 224))[None])
             score_queue.put(a)
             pred = np.sum(list(score_queue.queue),axis=0)
             site = labels[np.argmax(pred)]
-            pred[np.argmax(pred)] = 0
+            print(pred)
+            pred[0][np.argmax(pred)] = 0
             top2 = labels[np.argmax(pred)]
         disp_frame = text_on_frame(cv.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv.INTER_CUBIC), site, top2)
         cv.imshow('classification', disp_frame)
@@ -81,7 +82,7 @@ def video(cap_):
 
 if __name__ == '__main__':
 
-    MODEL_PATH = 'MODEL_DENSE121'
+    MODEL_PATH = 'MODEL_MOBILENETV3'
     labels = ['angle', 'greater_curvature', 'junction', 'oesophagus', 'pylore_antre', 'retro_vision', 'unqualified']
     model = tf.keras.models.load_model(MODEL_PATH)
     print('model loaded')
@@ -98,7 +99,7 @@ if __name__ == '__main__':
             while not cap.isOpened():
                 cap = cv.VideoCapture(INPUT_PATH)
                 cv.waitKey(100)
-            writer = cv.VideoWriter("output.avi",
+            writer = cv.VideoWriter(f"classification_{MODEL_PATH}_{os.path.splitext(INPUT_PATH)[0][-3:]}.avi",
                                      cv.VideoWriter_fourcc(*"MJPG"), 24, (960, 540))
 
             video(cap)
