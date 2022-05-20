@@ -19,7 +19,7 @@ def row_normalization(row):
 
 def save_time_line(predictions):
     x = np.arange(len(predictions)) / 25  # 25 frames per second
-    predictions.apply(row_normalization)
+    predictions= np.apply_along_axis(row_normalization, 1, predictions)
     plt.figure(figsize=(12, 4))
     plt.plot(x, predictions)
     plt.xlabel('seconds')
