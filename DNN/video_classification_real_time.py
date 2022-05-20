@@ -5,9 +5,29 @@ import time
 import tkinter
 import tensorflow as tf
 import queue as qq
+import matplotlib.pyplot as plt
 from tkinter import filedialog, messagebox
 from multiprocessing import Process, Queue, Value
 
+
+def row_normalization(row):
+    i = np.argmax(row)
+    temp_row = np.zeros(len(row))
+    temp_row[i] = i + 1
+    return temp_row
+
+
+def save_time_line(predictions):
+    x = np.arange(len(predictions)) / 25  # 25 frames per second
+    predictions.apply(row_normalization)
+    plt.figure(figsize=(12, 4))
+    plt.plot(x, predictions)
+    plt.xlabel('seconds')
+    plt.ylabel('anatomical site')
+    plt.title('time line - video classification')
+    ax = plt.gca()
+    ax.legends(['angle', 'corpus', 'junction', 'oesophagus', 'pylore_antre', 'retro_vision', 'unclassified'])
+    plt.savefig('plot.png')
 
 
 def crop(img):
@@ -35,6 +55,7 @@ def crop(img):
 
 def classification_frames(queue_to, queue_treated, v):
     labels = ['angle', 'corpus', 'junction', 'oesophagus', 'pylore_antre', 'retro_vision', 'unclassified']
+    predictions = np.array([0, 0, 0, 0, 0, 0, 0])
     site = ""
     local_count = 0
     score_queue = qq.Queue()
@@ -44,18 +65,24 @@ def classification_frames(queue_to, queue_treated, v):
         while queue_to.empty():
             print(v.value)
             time.sleep(0)  # thread yield
+            if v.value != 1:
+                break
+        if v.value != 1:
+            break
         frame = queue_to.get()  # get frame from queue
         if local_count > 50 and not local_count % 5:
             if score_queue.qsize() > 5:
                 score_queue.get()
             a = model.predict(tf.image.resize(cv.cvtColor(crop(frame), cv.COLOR_BGR2RGB), (224, 224))[None])
             score_queue.put(a)
-            pred = np.sum(list(score_queue.queue),axis=0)
+            pred = np.sum(list(score_queue.queue), axis=0)
+            predictions = np.append(predictions, pred, axis=0)
             site = labels[np.argmax(pred)]
         disp_frame = cv.putText(frame, f"TOP1_pred = {site}", (5, 40), cv.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0),
-                                1,cv.LINE_AA)
+                                1, cv.LINE_AA)
         queue_treated.put(disp_frame)
         local_count += 1
+    save_time_line(predictions)
 
 
 def video(INPUT_PATH, queue_to, v):
@@ -82,7 +109,7 @@ def display(queue_treated, v):
         while queue_treated.empty():
             time.sleep(0)  # thread yiel
         frame = queue_treated.get()  # get frame from queue
-        cv.imshow('classification',cv.resize(frame, None, fx=0.7, fy=0.7, interpolation=cv.INTER_CUBIC))
+        cv.imshow('classification', cv.resize(frame, None, fx=0.7, fy=0.7, interpolation=cv.INTER_CUBIC))
         k = cv.waitKey(1) & 0xFF
         if k == ord('p'):
             while True:
