@@ -12,21 +12,21 @@ from multiprocessing import Process, Queue, Value
 
 def row_normalization(row):
     i = np.argmax(row)
-    temp_row = np.zeros(len(row))
+    temp_row = np.full(len(row), np.nan)
     temp_row[i] = i + 1
     return temp_row
 
 
 def save_time_line(predictions):
-    x = np.arange(len(predictions)) / 25  # 25 frames per second
-    predictions= np.apply_along_axis(row_normalization, 1, predictions)
+    x = np.arange(len(predictions)) / 5  # 5 frames treated per second
+    predictions = np.apply_along_axis(row_normalization, 1, predictions)
     plt.figure(figsize=(12, 4))
     plt.plot(x, predictions)
     plt.xlabel('seconds')
     plt.ylabel('anatomical site')
     plt.title('time line - video classification')
     ax = plt.gca()
-    ax.legends(['angle', 'corpus', 'junction', 'oesophagus', 'pylore_antre', 'retro_vision', 'unclassified'])
+    ax.legend(['angle', 'corpus', 'junction', 'oesophagus', 'pylore_antre', 'retro_vision', 'unclassified'])
     plt.savefig('plot.png')
 
 
@@ -63,11 +63,10 @@ def classification_frames(queue_to, queue_treated, v):
     print('mmmm')
     while v.value != 1:
         while queue_to.empty():
-            print(v.value)
             time.sleep(0)  # thread yield
-            if v.value != 1:
+            if v.value == 1:
                 break
-        if v.value != 1:
+        if v.value == 1:
             break
         frame = queue_to.get()  # get frame from queue
         if local_count > 50 and not local_count % 5:
