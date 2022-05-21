@@ -17,17 +17,21 @@ def row_normalization(row):
     return temp_row
 
 
-def save_time_line(predictions):
+def save_time_line(predictions, labels):
     x = np.arange(len(predictions)) / 5  # 5 frames treated per second
     predictions = np.apply_along_axis(row_normalization, 1, predictions)
     plt.figure(figsize=(12, 4))
     plt.plot(x, predictions)
+    plt.yticks([1, 2, 3, 4, 5, 6, 7], labels)
     plt.xlabel('seconds')
     plt.ylabel('anatomical site')
     plt.title('time line - video classification')
-    ax = plt.gca()
-    ax.legend(['angle', 'corpus', 'junction', 'oesophagus', 'pylore_antre', 'retro_vision', 'unclassified'])
+    # ax = plt.gca()
+    # ax.set_yticks([1,2,3,4,5,6,7])
+    # ax.set_ytickslabels(labels)
+    # ax.legend(labels)
     plt.savefig('plot.png')
+    print("plot saved")
 
 
 def crop(img):
@@ -53,9 +57,56 @@ def crop(img):
     return img[y1:y2, x1:x2]
 
 
+def fft_blur(image):
+    # source : pyimagesearch
+    size = 15
+    (cx, cy) = (int(400 / 2.0), int(400 / 2.0))
+    fft = np.fft.fft2(image)
+    fftShift = np.fft.fftshift(fft)
+    fftShift[cy - size: cy + size, cx - size: cx + size] = 0
+    fftShift = np.fft.ifftshift(fftShift)
+    recon = np.fft.ifft2(fftShift)
+
+    magnitude = 20 * np.log(np.abs(recon) + 0.00001)
+    mean = np.mean(magnitude)
+    return mean
+
+
+def write_list(path, label, list):
+    for i in range(len(list)):
+        cv.imwrite(path + label + "\\" + str(i) + ".png", list[i])
+
+
+def select_images(list_, labels):
+    list_vconcat = []
+    for count, site in enumerate(list_):
+        print(labels[count])
+        print(len(list_[count]))
+        temp_img = []
+        temp_blur = []
+        ls = len(site)//2
+        for image in site:
+            blur = fft_blur(image)
+            temp_img.append(image)
+            temp_blur.append(blur)
+        index1 = np.argsort(temp_blur[0:ls])[len(temp_blur[0:ls])//2]
+        val1 = temp_img[0:ls][index1]
+        index2 = np.argsort(temp_blur[ls:])[len(temp_blur[ls:])//2]
+        val2 = temp_img[ls:][index2]
+        temp_img = [val1,val2]
+
+        list_[count] = temp_img
+        write_list("..\\Images\\Outputs\\", labels[count], temp_img)
+        cv.imwrite('test' + str(count) + ".png", cv.vconcat(temp_img))
+        list_vconcat.append(cv.vconcat(temp_img))
+    cv.imwrite('testHCONCAT.png', cv.hconcat(list_vconcat))
+    print('images sampled')
+
+
 def classification_frames(queue_to, queue_treated, v):
     labels = ['angle', 'corpus', 'junction', 'oesophagus', 'pylore_antre', 'retro_vision', 'unclassified']
-    predictions = np.array([0, 0, 0, 0, 0, 0, 0])
+    predictions = np.array([np.full(len(labels), np.nan)])
+    image_samples = [[], [], [], [], [], []]
     site = ""
     local_count = 0
     score_queue = qq.Queue()
@@ -72,16 +123,24 @@ def classification_frames(queue_to, queue_treated, v):
         if local_count > 50 and not local_count % 5:
             if score_queue.qsize() > 5:
                 score_queue.get()
-            a = model.predict(tf.image.resize(cv.cvtColor(crop(frame), cv.COLOR_BGR2RGB), (224, 224))[None])
+            croped = tf.image.resize(cv.cvtColor(crop(frame), cv.COLOR_BGR2RGB), (224, 224))
+            a = model.predict(croped[None])
             score_queue.put(a)
             pred = np.sum(list(score_queue.queue), axis=0)
+            index = np.argmax(pred)
+            site = labels[index]
+            ####
             predictions = np.append(predictions, pred, axis=0)
-            site = labels[np.argmax(pred)]
+            if site != 'unclassified' and np.argmax(a) == index:
+                image_samples[index].append(cv.resize(crop(frame), (600, 600)))
+            ###
+
         disp_frame = cv.putText(frame, f"TOP1_pred = {site}", (5, 40), cv.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0),
                                 1, cv.LINE_AA)
         queue_treated.put(disp_frame)
         local_count += 1
-    save_time_line(predictions)
+    select_images(image_samples, labels)
+    save_time_line(predictions, labels)
 
 
 def video(INPUT_PATH, queue_to, v):
@@ -107,6 +166,10 @@ def display(queue_treated, v):
     while v.value != 1:
         while queue_treated.empty():
             time.sleep(0)  # thread yiel
+            if v.value == 1:
+                break
+        if v.value == 1:
+            break
         frame = queue_treated.get()  # get frame from queue
         cv.imshow('classification', cv.resize(frame, None, fx=0.7, fy=0.7, interpolation=cv.INTER_CUBIC))
         k = cv.waitKey(1) & 0xFF
